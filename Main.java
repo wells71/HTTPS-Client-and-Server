@@ -1,42 +1,64 @@
-// Basic Http Server
+// Echo Server
+// Listens for incoming client connection, echoes messages back, and can handle multiple messages.
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 
-class Main{
+public class Main {
+    public static void main(String[] args) {
 
-    public static void main(String args[]){
+        System.out.println("Basic Server, with echo functionality");
 
-        // Create an object port of any value between 1025 and 65536
-        // to avoid collisions with priviledged services running on ports 0 to 1024
-        int port = 1099;
-       // InetAddress = "http://localhost";
+        // Use a port number between 1024 and 65535 for non-privileged applications.
+        // Ports 0-1023 are reserved for system processes (privileged ports).
+        // Setting port = 0 allows the OS to assign an available ephemeral port dynamically.
+        int port = 8080;
 
-        try{
+        ServerSocket serverSocket;
+        Socket socket;
+
+        try {
 
             // Create a server socket
-            ServerSocket serverSocket = new ServerSocket(port);
+            serverSocket = new ServerSocket(port);
+            System.out.println("Waiting for connection...");
 
-            // Create socket to accept client connections
-            Socket socket = serverSocket.accept();
+            while (true) {
+                socket = serverSocket.accept();
+
+                // display port server is running on
+                System.out.println("Connected to client, bound on port " + serverSocket.getLocalPort()
+                        + socket.getInetAddress());
+
+                BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
 
-            // Handle data of incoming connections
-            DataInputStream dataInputStream = new DataInputStream(
-                    socket.getInputStream());
+                String inputLine;
+                while ((inputLine = br.readLine()) != null) {
+                    System.out.println("Client says: " +
+                            inputLine);
 
-            // Handle data of outgoing connections
-            DataOutputStream dataOutputStream = new DataOutputStream(
-                    socket.getOutputStream());
+                    // Echo received message back to client
+                    out.println(inputLine);
 
-        }
-        catch (IOException ex) {
+                    if (inputLine.equalsIgnoreCase("exit")){
+                        break;
+                    }
+                }
 
+                // terminate connection with client
+                socket.close();
+                System.out.println("Client disconnected.");
+
+            }
+
+        } catch (IOException ex) {
+            System.out.println("Error: " + ex.getMessage());
         }
     }
 }
